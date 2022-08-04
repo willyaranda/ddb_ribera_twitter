@@ -51,11 +51,11 @@ const requestListener = async (req, res) => {
   try {
     await doIt();
     res.writeHead(200);
-    res.end('Done');
+    return res.end('Done');
   } catch (error) {
     console.error(error);
     res.writeHead(500);
-    res.end(error.message);
+    return res.end(error.message);
   }
 };
 
