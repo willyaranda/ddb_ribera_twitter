@@ -4,7 +4,8 @@
   "description": "Diario de Burgos, edición Ribera. Twiteando.",
   "main": "index.js",
   "scripts": {
-    "test": "nyc ava"
+    "test": "nyc ava",
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
