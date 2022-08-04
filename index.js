@@ -60,7 +60,7 @@ const requestListener = async (req, res) => {
 };
 
 const server = http.createServer(requestListener);
-server.listen(PORT, LOCALHOST, async () => {
+server.listen(PORT, async () => {
   console.log(`Server is running on http://${LOCALHOST}:${PORT}`);
   await doIt();
 });
