@@ -1,5 +1,9 @@
 const cheerio = require('cheerio');
 const bent = require('bent');
+const http = require('http');
+
+const PORT = process.env.PORT || 5000;
+const LOCALHOST = 'localhost';
 
 const HOST = 'https://www.diariodeburgos.es';
 
@@ -32,7 +36,7 @@ const publish = async (articles) => {
   return true;
 };
 
-(async () => {
+const doIt = async () => {
   console.log('Starting...');
   const articles = await getArticles();
   console.log(articles);
@@ -41,4 +45,22 @@ const publish = async (articles) => {
   const publishArticles = await publish(unpublished);
   console.log(publishArticles);
   console.log('Done...');
-})();
+};
+
+const requestListener = async (req, res) => {
+  try {
+    await doIt();
+    res.writeHead(200);
+    res.end('Done');
+  } catch (error) {
+    console.error(error);
+    res.writeHead(500);
+    res.end(error.message);
+  }
+};
+
+const server = http.createServer(requestListener);
+server.listen(PORT, LOCALHOST, async () => {
+  console.log(`Server is running on http://${LOCALHOST}:${PORT}`);
+  await doIt();
+});
