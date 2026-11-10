@@ -1,0 +1,60 @@
+name: Check articles
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+# Never run two checks at once: both would email the same new articles
+concurrency:
+  group: check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # push to the articles branch
+      id-token: write # OIDC for AWS
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Seen articles live on their own branch so main stays fully protected
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: articles
+          path: state
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --omit=dev
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: arn:aws:iam::832895398874:role/ddb-ribera-github-actions
+          aws-region: eu-west-1
+      - run: node index.js
+        env:
+          ARTICLES_DIR: state
+          EMAIL_TO: ${{ vars.EMAIL_TO }}
+          KUMA_PUSH_URL: ${{ secrets.KUMA_PUSH_URL }}
+      # always(): articles already emailed must be recorded even if the check
+      # failed afterwards (e.g. the stale-articles warning)
+      - name: Commit new articles
+        if: always()
+        working-directory: state
+        run: |
+          git add -A
+          git diff --cached --quiet && exit 0
+          git -c user.name='github-actions[bot]' \
+            -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+            commit -q -m "Add $(git diff --cached --name-only | wc -l | tr -d ' ') article(s)"
+          for i in 1 2 3; do
+            git pull -q --rebase && git push -q && exit 0
+            sleep 5
+          done
+          exit 1

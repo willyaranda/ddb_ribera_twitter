@@ -1,24 +1,18 @@
 import { createHash } from 'node:crypto';
 import {
-  access, mkdir, readdir, stat, writeFile,
+  access, mkdir, readdir, readFile, writeFile,
 } from 'node:fs/promises';
 import { join } from 'node:path';
-import { setTimeout as sleep } from 'node:timers/promises';
 import { load } from 'cheerio';
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 
-const CHECK_INTERVAL = 10 * 60 * 1000; // 10 minutes
 const DAY = 24 * 60 * 60 * 1000;
 const HOST = 'https://www.diariodeburgos.es';
 const ARTICLES_DIR = process.env.ARTICLES_DIR ?? 'articles';
 const KUMA_PUSH_URL = process.env.KUMA_PUSH_URL;
 const STALE_DAYS = Number(process.env.STALE_DAYS ?? 3);
 const FROM_ADDRESS = 'info@sentiraranda.es';
-const TO_ADDRESSES = process.env.EMAIL_TO?.split(',').map((s) => s.trim()) ?? [
-  'leticia.nunez.nunez@gmail.com',
-  'guillermo@sentiraranda.es',
-  'equiporedes@sentiraranda.es',
-];
+const TO_ADDRESSES = process.env.EMAIL_TO?.split(',').map((s) => s.trim()).filter(Boolean);
 
 export const fileNameFor = (link) => `${createHash('sha1').update(link).digest('hex')}.json`;
 
@@ -63,16 +57,20 @@ export const buildEmail = ({ title, link }, to = TO_ADDRESSES) => new SendEmailC
 export const publish = async (ses, articles, dir = ARTICLES_DIR) => {
   for (const article of articles) {
     await ses.send(buildEmail(article));
-    await writeFile(join(dir, fileNameFor(article.link)), JSON.stringify(article, null, 2));
+    const saved = { ...article, savedAt: new Date().toISOString() };
+    await writeFile(join(dir, fileNameFor(article.link)), `${JSON.stringify(saved, null, 2)}\n`);
     console.log(`Sent: ${article.title}`);
   }
 };
 
-// Milliseconds since the newest stored article was saved
+// Milliseconds since the newest stored article was saved. Uses savedAt, not file
+// mtimes, because a fresh git checkout gives every file the same mtime.
 export const newestArticleAge = async (dir = ARTICLES_DIR, now = Date.now()) => {
   const names = (await readdir(dir)).filter((n) => n.endsWith('.json'));
-  const mtimes = await Promise.all(names.map(async (n) => (await stat(join(dir, n))).mtimeMs));
-  return now - Math.max(...mtimes); // Infinity when there are no articles yet
+  const saved = await Promise.all(names.map(async (n) => (
+    Date.parse(JSON.parse(await readFile(join(dir, n), 'utf8')).savedAt) || 0
+  )));
+  return now - Math.max(...saved); // Infinity when there are no articles yet
 };
 
 // Throws when something looks wrong, so the caller can report it as DOWN
@@ -100,20 +98,18 @@ export const pushStatus = async (status, msg, url = KUMA_PUSH_URL) => {
   }
 };
 
+// One check per run (scheduled by GitHub Actions); a failure sets a non-zero exit code
 const main = async () => {
+  if (!TO_ADDRESSES?.length) throw new Error('EMAIL_TO is not set');
   await mkdir(ARTICLES_DIR, { recursive: true });
-  const ses = new SESClient({ region: 'eu-west-1' });
-  // A loop instead of setInterval so a slow check never overlaps the next one
-  for (;;) {
-    try {
-      const msg = await check(ses);
-      console.log(msg);
-      await pushStatus('up', msg);
-    } catch (err) {
-      console.error('Check failed:', err);
-      await pushStatus('down', err.message);
-    }
-    await sleep(CHECK_INTERVAL);
+  try {
+    const msg = await check(new SESClient({ region: 'eu-west-1' }));
+    console.log(msg);
+    await pushStatus('up', msg);
+  } catch (err) {
+    console.error('Check failed:', err);
+    await pushStatus('down', err.message);
+    process.exitCode = 1;
   }
 };
 

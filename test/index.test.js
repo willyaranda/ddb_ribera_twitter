@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  mkdtemp, readFile, utimes, writeFile,
+  mkdtemp, readFile, writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -54,7 +54,9 @@ test('publish saves a file only after the email is sent', async () => {
     },
   };
   await assert.rejects(publish(ses, [ok, bad], dir), /SES down/);
-  assert.deepEqual(JSON.parse(await readFile(join(dir, fileNameFor(ok.link)), 'utf8')), ok);
+  const saved = JSON.parse(await readFile(join(dir, fileNameFor(ok.link)), 'utf8'));
+  assert.equal(saved.title, ok.title);
+  assert.ok(Date.now() - Date.parse(saved.savedAt) < 60_000);
   assert.deepEqual(await getUnseenArticles([ok, bad], dir), [bad]);
 });
 
@@ -80,10 +82,8 @@ test('check fails when the page has no articles', async (t) => {
 test('check fails when no new article arrived for too long', async (t) => {
   stubFetch(t, page('/noticia/viejo'));
   const dir = await mkdtemp(join(tmpdir(), 'ddb-'));
-  const file = join(dir, fileNameFor('https://www.diariodeburgos.es/noticia/viejo'));
-  await writeFile(file, '{}');
-  const old = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000);
-  await utimes(file, old, old);
+  const savedAt = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString();
+  await writeFile(join(dir, fileNameFor('https://www.diariodeburgos.es/noticia/viejo')), JSON.stringify({ savedAt }));
   await assert.rejects(check(okSes, dir), /No new articles for 4\.0 days/);
 });
 
@@ -94,12 +94,11 @@ test('check publishes new articles and reports a summary', async (t) => {
   assert.equal(await check(okSes, dir), '2 articles, 1 new');
 });
 
-test('newestArticleAge uses the most recent file', async () => {
+test('newestArticleAge uses the most recent savedAt, ignoring files without one', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'ddb-'));
-  await writeFile(join(dir, 'a.json'), '{}');
-  await writeFile(join(dir, 'b.json'), '{}');
-  await utimes(join(dir, 'a.json'), new Date(1000), new Date(1000));
-  await utimes(join(dir, 'b.json'), new Date(5000), new Date(5000));
+  await writeFile(join(dir, 'a.json'), JSON.stringify({ savedAt: new Date(1000).toISOString() }));
+  await writeFile(join(dir, 'b.json'), JSON.stringify({ savedAt: new Date(5000).toISOString() }));
+  await writeFile(join(dir, 'c.json'), '{}');
   assert.equal(await newestArticleAge(dir, 6000), 1000);
 });
 
