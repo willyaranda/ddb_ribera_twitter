@@ -4,7 +4,7 @@ Checks the [Diario de Burgos Ribera section](https://www.diariodeburgos.es/secci
 
 ## Run
 
-Requires Node 26 (`nvm use`).
+Requires Node 26 via [nvm](https://github.com/nvm-sh/nvm) (`nvm install`, reads `.nvmrc`); `start.sh` runs `nvm use` itself.
 
 ```sh
 npm ci

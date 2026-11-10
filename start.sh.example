@@ -1,5 +1,12 @@
 #!/bin/bash
 
+cd "$(dirname "$0")" || exit 1
+
+# Node version comes from .nvmrc
+export NVM_DIR="$HOME/.nvm"
+. "$NVM_DIR/nvm.sh"
+nvm use || exit 1
+
 while true
 do
     env AWS_ACCESS_KEY_ID=your-access-key-id AWS_SECRET_ACCESS_KEY="your-secret-access-key" \
