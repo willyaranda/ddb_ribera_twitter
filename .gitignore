@@ -1,1 +1,3 @@
 node_modules/
+articles/*.json
+start.sh

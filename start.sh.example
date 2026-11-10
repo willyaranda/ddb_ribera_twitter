@@ -1,0 +1,8 @@
+#!/bin/bash
+
+while true
+do
+    env AWS_ACCESS_KEY_ID=your-access-key-id AWS_SECRET_ACCESS_KEY="your-secret-access-key" \
+        KUMA_PUSH_URL="http://127.0.0.1:3001/api/push/your-push-token" npm start
+    sleep 60
+done

@@ -4,13 +4,15 @@
   "description": "Diario de Burgos, edición Ribera. Twiteando.",
   "main": "index.js",
   "scripts": {
-    "test": "nyc ava",
-    "start": "node index.js"
+    "start": "node index.js",
+    "test": "node --test",
+    "lint": "eslint ."
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/willyaranda/ddb_ribera_twitter.git"
   },
+  "type": "module",
   "keywords": [
     "diario",
     "de",
@@ -25,24 +27,16 @@
     "url": "https://github.com/willyaranda/ddb_ribera_twitter/issues"
   },
   "homepage": "https://github.com/willyaranda/ddb_ribera_twitter#readme",
-  "devDependencies": {
-    "ava": "^4.3.1",
-    "eslint": "^8.21.0",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-ava": "^13.2.0",
-    "eslint-plugin-import": "^2.26.0",
-    "nyc": "^15.1.0"
-  },
   "dependencies": {
-    "bent": "^7.3.12",
-    "cheerio": "^1.0.0-rc.12"
+    "@aws-sdk/client-ses": "^3.1165.0",
+    "cheerio": "^1.2.0"
   },
-  "ava": {
-    "files": [
-      "test/**/*"
-    ],
-    "concurrency": 5,
-    "failFast": true,
-    "verbose": true
+  "engines": {
+    "node": ">=26"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.14.0",
+    "globals": "^17.14.0"
   }
 }
