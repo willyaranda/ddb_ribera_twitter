@@ -1,0 +1,21 @@
+start.sh.example
+  s_a22c8ddba6f790::t_1dc6f5511563dd 3-9
+README.md
+  s_a22c8ddba6f790::t_b356f7441dca47 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "98e105f72a7891143f16e233cb8fd85076037dd0",
+  "prompts": {},
+  "sessions": {
+    "s_a22c8ddba6f790": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59c0f14b-79a0-489e-a053-28b45c124c26",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Guillermo López <willyaranda@gmail.com>"
+    }
+  }
+}
