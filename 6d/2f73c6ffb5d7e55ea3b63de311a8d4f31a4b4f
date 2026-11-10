@@ -1,0 +1,27 @@
+index.js
+  s_a22c8ddba6f790::t_8176d0ac54b848 3,15,60-61,66-67,70-73,101,103,105-112
+test/index.test.js
+  s_a22c8ddba6f790::t_8176d0ac54b848 4,57-59,85-86,97,99-101
+.github/workflows/check.yml
+  s_a22c8ddba6f790::t_cadc6545c33fac 1-19,21-23,31-41,43-48,50,52-60
+  s_a22c8ddba6f790::t_3254b9bd60ce6c 20,24-30,42,49,51
+README.md
+  s_a22c8ddba6f790::t_3254b9bd60ce6c 5
+  s_a22c8ddba6f790::t_cadc6545c33fac 3,7-17,21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6d2f73c6ffb5d7e55ea3b63de311a8d4f31a4b4f",
+  "prompts": {},
+  "sessions": {
+    "s_a22c8ddba6f790": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "59c0f14b-79a0-489e-a053-28b45c124c26",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Guillermo López <willyaranda@gmail.com>"
+    }
+  }
+}
