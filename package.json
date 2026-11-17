@@ -28,7 +28,7 @@
   },
   "homepage": "https://github.com/willyaranda/ddb_ribera_twitter#readme",
   "dependencies": {
-    "@aws-sdk/client-ses": "^3.1165.0",
+    "@aws-sdk/client-ses": "^3.1169.0",
     "cheerio": "^1.2.0"
   },
   "engines": {
@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "eslint": "^10.14.0",
+    "eslint": "^10.15.0",
     "globals": "^17.14.0"
   }
 }
